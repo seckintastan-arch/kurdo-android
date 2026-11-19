@@ -1,2 +1,2 @@
-# kurdo_android
-yapay_z
+# kurdo-android
+yapay-z
