@@ -427,7 +427,7 @@ private fun KurdoScreen(onSpeak: (String) -> Unit, onListen: ((String) -> Unit) 
         val memory = when {
             explicit != null -> "Kullanıcının öğrettiği bilgi: " + explicit.groupValues[1].take(300)
             name != null -> "Kullanıcının adı: " + name.groupValues[1]
-            listOf("seviyorum", "hoşlanıyorum", "tercih ederim", "tercihim", "istemiyorum", "kullanıyorum", "motorum", "aracım").any { lower.contains(it) } -> clean
+                        clean.length >= 12 && !Regex("""(?:şifre|parola|password|api[ _-]?key|erişim anahtarı|doğrulama kodu|sms kodu|iban|kredi kartı|cvv|tc kimlik|kimlik numarası|telefon numaram|adresim|e.?posta adresim)""").containsMatchIn(lower) && (lower.startsWith("ben ") || lower.startsWith("benim ") || lower.startsWith("biz ") || lower.startsWith("bizim ") || listOf("seviyorum", "sevmiyorum", "hoşlanıyorum", "hoşlanmıyorum", "tercih ederim", "tercih ediyorum", "tercihim", "istemiyorum", "istiyorum", "kullanıyorum", "yaşıyorum", "çalışıyorum", "öğreniyorum", "öğrenmek istiyorum", "öğrenmeli", "hedefim", "amacım", "projem", "motorum", "aracım", "ailem").any { lower.contains(it) }) && !clean.endsWith("?") -> "Kullanıcı hakkında sohbetten öğrenilen bilgi/tercih: " + clean.take(300)
             else -> null
         }
         if (memory != null && memory !in memories) {
@@ -750,7 +750,7 @@ private fun KurdoScreen(onSpeak: (String) -> Unit, onListen: ((String) -> Unit) 
                         }
                     }
                     Spacer(Modifier.height(8.dp))
-                    Text("Bilgi öğretmek için sohbete ‘öğren: …’ veya ‘hatırla …’ yaz.", fontSize = 12.sp)
+                    Text("Önemli tercih ve bilgileri sohbetten otomatik kaydederim; istersen ‘öğren: …’ ile ekleyebilirsin.", fontSize = 12.sp)
                 }
             },
             confirmButton = { androidx.compose.material3.TextButton(onClick = { showMemoryDialog = false }) { Text("Kapat") } },
