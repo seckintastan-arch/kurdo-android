@@ -10,7 +10,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 private val readableExtensions = setOf("txt", "md", "csv", "json", "xml", "log", "html")
-private val sensitiveName = Regex("(?i)(password|passwd|secret|credential|token|\.env|id_rsa|keystore|wallet|backup)")
+private val sensitiveName = Regex("(?i)(password|passwd|secret|credential|token|\\.env|id_rsa|keystore|wallet|backup)")
 private val sensitiveContent = Regex("(?i)(api[_ -]?key|access[_ -]?token|password|passwd|private[_ -]?key|secret[_ -]?key)\\s*[:=]")
 
 internal fun hasSharedStorageAccess(): Boolean =
