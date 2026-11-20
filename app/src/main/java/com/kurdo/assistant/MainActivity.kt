@@ -79,7 +79,7 @@ import java.util.Locale
 
 private const val MODEL_FILE = "kurdo-qwen-0.8b.litertlm"
 private const val MODEL_URL = "https://huggingface.co/litert-community/Qwen3.5-0.8B/resolve/main/Qwen3.5-0.8B_int8.litertlm?download=true"
-private const val MODEL_BYTES = 964566992L
+private const val MODEL_BYTES = 964657152L
 private val MODEL_LOCK = Any()
 
 data class ChatLine(val text: String, val fromUser: Boolean)
@@ -201,7 +201,7 @@ private class LocalKurdoModel(private val context: Context) {
 
 private suspend fun downloadModel(context: Context, progress: (Long, Long) -> Unit): File = withContext(Dispatchers.IO) {
     val destination = File(context.filesDir, MODEL_FILE)
-    if (destination.exists() && destination.length() == MODEL_BYTES) return@withContext destination
+    if (destination.exists() && destination.length() > 100_000_000L) return@withContext destination
     if (destination.exists()) destination.delete()
     val partial = File(context.filesDir, MODEL_FILE + ".part")
     val connection = (URL(MODEL_URL).openConnection() as HttpURLConnection).apply {
@@ -213,20 +213,27 @@ private suspend fun downloadModel(context: Context, progress: (Long, Long) -> Un
     try {
         connection.connect()
         check(connection.responseCode in 200..299) { "Model sunucusu HTTP " + connection.responseCode + " yanıtı verdi." }
-        val total = connection.contentLengthLong.takeIf { it > 0 } ?: MODEL_BYTES
+        val responseLength = connection.contentLengthLong
+        val total = responseLength.takeIf { it > 0 } ?: MODEL_BYTES
         connection.inputStream.use { input ->
             FileOutputStream(partial).use { output ->
                 val buffer = ByteArray(1024 * 1024)
                 var copied = 0L
+                var lastProgressAt = 0L
                 while (true) {
                     val count = input.read(buffer)
                     if (count < 0) break
                     output.write(buffer, 0, count)
                     copied += count
-                    Handler(Looper.getMainLooper()).post { progress(copied, total) }
+                    val now = android.os.SystemClock.uptimeMillis()
+                    if (now - lastProgressAt >= 250L) {
+                        lastProgressAt = now
+                        val progressCopied = copied
+                        Handler(Looper.getMainLooper()).post { progress(progressCopied, total) }
+                    }
                 }
                 output.fd.sync()
-                check(copied == MODEL_BYTES) { "Model boyutu beklenenden farklı. İndirme tamamlanmadı; tekrar deneyebilirsin." }
+                check(responseLength <= 0L || copied == responseLength) { "Model indirmesi tamamlanmadı; bağlantıyı kontrol edip tekrar dene." }
             }
         }
         check(partial.renameTo(destination)) { "Model dosyası telefona kaydedilemedi." }
@@ -323,7 +330,7 @@ private fun KurdoScreen(onSpeak: (String) -> Unit, onListen: ((String) -> Unit) 
 
     LaunchedEffect(Unit) {
         val model = File(context.filesDir, MODEL_FILE)
-        if (model.exists() && model.length() == MODEL_BYTES) {
+        if (model.exists() && model.length() > 100_000_000L) {
             status = "Model indirildi. Kurdo'yu başlatmak için aşağıdaki düğmeye bas."
         }
     }
@@ -412,7 +419,7 @@ private fun KurdoScreen(onSpeak: (String) -> Unit, onListen: ((String) -> Unit) 
                                 scope.launch {
                                     try {
                                         val modelFile = File(context.filesDir, MODEL_FILE)
-                                        if (modelFile.exists() && modelFile.length() == MODEL_BYTES) {
+                                        if (modelFile.exists() && modelFile.length() > 100_000_000L) {
                                             status = "Model telefonda başlatılıyor…"
                                             runtime.load()
                                             modelReady = true
@@ -432,7 +439,7 @@ private fun KurdoScreen(onSpeak: (String) -> Unit, onListen: ((String) -> Unit) 
                                         status = "Kurdo hazırlanamadı."
                                     } finally { working = false }
                                 }
-                            }) { Text(if (File(context.filesDir, MODEL_FILE).let { it.exists() && it.length() == MODEL_BYTES }) "Yerel modeli hazırla" else "Yerel modeli indir · yaklaşık 965 MB") }
+                            }) { Text(if (File(context.filesDir, MODEL_FILE).let { it.exists() && it.length() > 100_000_000L }) "Yerel modeli hazırla" else "Yerel modeli indir · yaklaşık 965 MB") }
                             if (progress > 0f && progress < 1f) {
                                 Spacer(Modifier.height(6.dp))
                                 androidx.compose.material3.LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
