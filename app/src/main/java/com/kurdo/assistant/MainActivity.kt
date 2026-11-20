@@ -181,13 +181,10 @@ private class LocalKurdoModel(private val context: Context) {
     suspend fun answer(question: String, memories: List<String>): String = withContext(Dispatchers.IO) {
         val active = synchronized(MODEL_LOCK) { conversation }
             ?: error("Önce yerel modeli hazırla.")
-        val note = if (memories.isEmpty()) "" else "
-Kullanıcının cihazda saklanan notları:
-" + memories.joinToString("
-")
+        val separator = System.lineSeparator()
+        val note = if (memories.isEmpty()) "" else separator + "Kullanıcının cihazda saklanan notları:" + separator + memories.joinToString(separator)
         val output = StringBuilder()
-        active.sendMessageAsync(note + "
-Kullanıcı: " + question).collect { output.append(it.toString()) }
+        active.sendMessageAsync(note + separator + "Kullanıcı: " + question).collect { output.append(it.toString()) }
         output.toString().trim().ifBlank { "Cevap üretemedim; bir kez daha dener misin?" }
     }
 
