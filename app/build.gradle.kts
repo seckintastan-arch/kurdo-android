@@ -10,8 +10,8 @@ android {
         applicationId = "com.kurdo.assistant"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "0.4.0"
+        versionCode = 5
+        versionName = "0.5.0"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -36,3 +36,15 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
+
+tasks.register("decodeKurdoAvatar") {
+    val encoded = file("src/main/res/drawable/kurdo_avatar.png.base64")
+    val decoded = file("src/main/res/drawable/kurdo_avatar.png")
+    inputs.file(encoded)
+    outputs.file(decoded)
+    doLast {
+        decoded.parentFile.mkdirs()
+        decoded.writeBytes(java.util.Base64.getDecoder().decode(encoded.readText().trim()))
+    }
+}
+tasks.named("preBuild").configure { dependsOn("decodeKurdoAvatar") }
