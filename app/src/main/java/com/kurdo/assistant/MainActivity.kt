@@ -427,7 +427,7 @@ private fun KurdoScreen(onSpeak: (String) -> Unit, onListen: ((String) -> Unit) 
                                         } else {
                                             downloadModel(context) { copied, total ->
                                                 progress = copied.toFloat() / total.toFloat()
-                                                progressLabel = "%.0f%% · %.0f / %.0f MB".format(Locale.US, copied / 1048576f, total / 1048576f)
+                                                progressLabel = "%.0f%% · %.0f / %.0f MB".format(Locale.US, copied.toFloat() / total.toFloat() * 100f, copied / 1048576f, total / 1048576f)
                                             }
                                             progress = 1f
                                             progressLabel = "İndirme tamamlandı"
