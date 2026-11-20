@@ -284,7 +284,7 @@ private fun KurdoScreen(onSpeak: (String) -> Unit, onListen: ((String) -> Unit) 
     fun captureMemory(text: String) {
         val clean = text.trim().take(180)
         val lower = clean.lowercase(Locale("tr", "TR"))
-        val name = Regex("(?:benim adım|adım)\s+([\p{L}]+(?:\s+[\p{L}]+)?)", RegexOption.IGNORE_CASE).find(clean)
+        val name = Regex("""(?:benim adım|adım)\s+([\p{L}]+(?:\s+[\p{L}]+)?)""", RegexOption.IGNORE_CASE).find(clean)
         val memory = when {
             name != null -> "Kullanıcının adı: " + name.groupValues[1]
             listOf("seviyorum", "hoşlanıyorum", "tercih ederim", "tercihim", "istemiyorum", "kullanıyorum", "motorum", "aracım").any { lower.contains(it) } -> clean
@@ -350,7 +350,7 @@ private fun KurdoScreen(onSpeak: (String) -> Unit, onListen: ((String) -> Unit) 
                 return ""
             }
         }
-        val call = Regex("(?:ara|telefon et)\s+([+0-9][0-9 +()\-]{5,})", RegexOption.IGNORE_CASE).find(text)
+        val call = Regex("""(?:ara|telefon et)\s+([+0-9][0-9 +()\-]{5,})""", RegexOption.IGNORE_CASE).find(text)
         if (call != null) {
             val number = call.groupValues[1].replace(Regex("[^+0-9]"), "")
             return try {
@@ -358,7 +358,7 @@ private fun KurdoScreen(onSpeak: (String) -> Unit, onListen: ((String) -> Unit) 
                 "Arama ekranını açtım; aramayı sen onayla."
             } catch (_: ActivityNotFoundException) { "Bu telefonda arama uygulaması bulunamadı." }
         }
-        val sms = Regex("mesaj\s+(?:gönder|yaz)\s+([+0-9][0-9 +()\-]{5,})\s+(.+)", RegexOption.IGNORE_CASE).find(text)
+        val sms = Regex("""mesaj\s+(?:gönder|yaz)\s+([+0-9][0-9 +()\-]{5,})\s+(.+)""", RegexOption.IGNORE_CASE).find(text)
         if (sms != null) {
             val number = sms.groupValues[1].replace(Regex("[^+0-9]"), "")
             return try {
