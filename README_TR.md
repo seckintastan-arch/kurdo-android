@@ -1,31 +1,26 @@
 # Kurdo Android
 
-Kurdo, Android telefonda çalışan kişisel yardımcı uygulamasıdır. Sohbet yanıtları LiteRT-LM üzerinden telefondaki yerel dil modeliyle üretilir; API anahtarı veya sohbet sunucusu kullanılmaz.
+Kurdo, Android telefonda çalışan kişisel yardımcı uygulamasıdır. Sohbet modeli ve hafıza telefonda tutulur; uygulama sohbet içeriğini bir sunucuya göndermez.
 
-## Bu sürümde
+## Özellikler
 
-- LiteRT-LM kullanan gerçek cihaz içi dil modeli sohbeti
-- Qwen3.5 0.8B INT8 LiteRT modelini uygulama içinden indirme
-- Ad ve bazı tercihleri cihazda yerel hafızaya kaydetme; son sohbetleri yerelde tutma
-- Türkçe Android metin okuma ve destek varsa çevrimdışı Türkçe konuşma tanıma
-- Feneri açıp kapatma
-- Telefon arama ekranını açma
-- Mesaj uygulamasını doldurup açma; gönderme işlemi kullanıcının onayına bırakılır
+- LiteRT-LM ile cihaz içi sohbet; model Wi-Fi üzerinden bir kez indirilir.
+- Türkçe sesle yazma ve Android TTS ile sesli yanıt (cihazın çevrimdışı konuşma desteği ve yüklü seslerine bağlıdır).
+- Sohbet geçmişi ve öğrenilmiş notlar cihazda saklanır.
+- `öğren: ...` veya `hatırla ...` yazarak Kurdo'ya kişisel bilgi/tercih kaydedilebilir; ilgili sorularda hafızadan çağrılır.
+- Kaydedilmiş hafızalar görüntülenebilir ve tek tek ya da topluca silinebilir.
+- Yinelenen cümleleri azaltan yanıt temizliği ve klavye açıldığında sohbeti kaydırılabilir tutan düzen.
+- Fener, arama ekranı ve mesaj taslağı komutları; arama/mesaj kullanıcı onayıyla tamamlanır.
+- Android 10 ve üzeri cihazlarda Kurdo varsayılan asistan olarak seçilebilir. Arka planda sürekli uyanık kelime dinleme bu sürümde yoktur.
 
-## İlk çalıştırma
+## Modelin sınırları
 
-1. APK'yi Android telefona kur ve Kurdo'yu aç.
-2. İlk kullanımda yaklaşık 965 MB olan yerel model dosyasını indir. Büyük dosya nedeniyle indirmeyi Wi-Fi üzerinden başlat.
-3. Model telefonda hazırlandıktan sonra sohbet çevrimdışı çalışır. Model uygulamanın özel dosya alanında tutulur.
-4. Konuşma tanıma ve fener, ilgili özellik ilk kez istendiğinde Android iznini kullanır.
+Mevcut 0.8B yerel model, çevrimdışı ve özel kullanım için tasarlanmıştır; büyük bulut modelleri kadar güçlü muhakeme veya geniş bilgi sunmaz. Hafıza özelliği model ağırlıklarını değiştirmez; kullanıcı tarafından verilen bilgileri yerel not olarak saklar ve ilgili yanıtlara ekler. Sohbetler çevrimdışı kalır.
 
-Model lisansı Apache 2.0'dır. İlk model indirme dışında uygulama sohbetlerini ağa göndermez. Android'in Türkçe TTS sesleri telefonda kurulu olan seslere bağlıdır; erkek ses ve Iğdır ağzı garantisi yoktur. Çevrimdışı sesle yazma, telefonda çevrimdışı Türkçe tanıma hizmeti kuruluysa çalışır.
+## Kurulum ve güncelleme
 
-Telefon komutları örnekleri: feneri aç, ara 05XXXXXXXXX, mesaj gönder 05XXXXXXXXX Merhaba.
-Arama ve mesaj komutları Android'in sistem uygulamasını açar; arama veya mesaj kullanıcı tarafından başlatılır.
+GitHub Actions debug APK üretir ve sürüm APK'sını GitHub Releases'a ekler. Güncellemelerde Android'in kurulum onayı gerekir. Üzerine kurulum için APK'ların aynı imzalama sertifikasıyla imzalanması zorunludur; debug derlemeleri kalıcı bir yayın imzası sağlamaz. Dağıtım güncellemesi açılmadan önce kalıcı bir imzalama anahtarı yapılandırılmalıdır. Bu anahtar depoya commit edilmemelidir.
 
 ## Derleme
 
-GitHub Actions içindeki Kurdo Android APK iş akışı Java 17, Gradle 8.13 ve Android SDK 35 ile assembleDebug çalıştırır. APK, Kurdo-debug-APK adlı iş akışı artifact'ı olarak yayımlanır.
-
-Yerel derleme için Android SDK 35 ve JDK 17 gerekir. Komut: gradle :app:assembleDebug.
+GitHub Actions, Java 17, Gradle 8.13 ve Android SDK 35 ile `:app:assembleDebug` çalıştırır. Yerel derleme için aynı SDK/JDK gerekir; komut `gradle :app:assembleDebug`.
