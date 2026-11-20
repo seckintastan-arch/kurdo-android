@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - name: Kaynak kodu al
         uses: actions/checkout@v4
@@ -35,3 +35,19 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
+      - name: Sürüm etiketini al
+        id: version
+        run: |
+          VERSION="$(sed -n 's/.*versionName = "\(.*\)"/\1/p' app/build.gradle.kts)"
+          test -n "$VERSION"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+      - name: APK sürümünü yayımla
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Kurdo ${{ steps.version.outputs.tag }}
+          body: Kurdo Android için indirilebilir debug APK.
+          files: app/build/outputs/apk/debug/app-debug.apk
+          overwrite_files: true
+          make_latest: true
