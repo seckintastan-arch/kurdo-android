@@ -41,7 +41,7 @@ dependencies {
 }
 
 tasks.register("decodeKurdoAvatar") {
-    val encoded = file("src/main/res/drawable/kurdo_avatar.png.base64")
+    val encoded = file("src/main/assets/kurdo_avatar_base64.txt")
     val decoded = file("src/main/res/drawable/kurdo_avatar.png")
     inputs.file(encoded)
     outputs.file(decoded)
