@@ -1,3 +1,5 @@
+import java.util.Base64
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -45,7 +47,7 @@ tasks.register("decodeKurdoAvatar") {
     outputs.file(decoded)
     doLast {
         decoded.parentFile.mkdirs()
-        decoded.writeBytes(java.util.Base64.getDecoder().decode(encoded.readText().trim()))
+        decoded.writeBytes(Base64.getDecoder().decode(encoded.readText().trim()))
     }
 }
 tasks.named("preBuild").configure { dependsOn("decodeKurdoAvatar") }
