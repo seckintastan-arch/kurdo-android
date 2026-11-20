@@ -79,7 +79,7 @@ import java.util.Locale
 
 private const val MODEL_FILE = "kurdo-qwen-0.8b.litertlm"
 private const val MODEL_URL = "https://huggingface.co/litert-community/Qwen3.5-0.8B/resolve/main/Qwen3.5-0.8B_int8.litertlm?download=true"
-private const val MODEL_BYTES = 964657152L
+private const val MODEL_BYTES = 964566992L
 private val MODEL_LOCK = Any()
 
 data class ChatLine(val text: String, val fromUser: Boolean)
@@ -155,6 +155,7 @@ private class LocalKurdoModel(private val context: Context) {
         val newEngine = Engine(EngineConfig(
             modelPath = model.absolutePath,
             backend = Backend.CPU(),
+            maxNumTokens = 2048,
             cacheDir = context.cacheDir.absolutePath
         ))
         try {
@@ -201,6 +202,7 @@ private class LocalKurdoModel(private val context: Context) {
 private suspend fun downloadModel(context: Context, progress: (Long, Long) -> Unit): File = withContext(Dispatchers.IO) {
     val destination = File(context.filesDir, MODEL_FILE)
     if (destination.exists() && destination.length() == MODEL_BYTES) return@withContext destination
+    if (destination.exists()) destination.delete()
     val partial = File(context.filesDir, MODEL_FILE + ".part")
     val connection = (URL(MODEL_URL).openConnection() as HttpURLConnection).apply {
         connectTimeout = 20000
@@ -322,15 +324,7 @@ private fun KurdoScreen(onSpeak: (String) -> Unit, onListen: ((String) -> Unit) 
     LaunchedEffect(Unit) {
         val model = File(context.filesDir, MODEL_FILE)
         if (model.exists() && model.length() == MODEL_BYTES) {
-            status = "İndirilen yerel model hazırlanıyor…"
-            try {
-                runtime.load()
-                modelReady = true
-                status = "Kurdo hazır; sohbet cihazda çevrimdışı çalışıyor."
-            } catch (error: Throwable) {
-                errorText = error.message ?: "Model açılamadı."
-                status = "Yerel model açılamadı."
-            }
+            status = "Model indirildi. Kurdo'yu başlatmak için aşağıdaki düğmeye bas."
         }
     }
     LaunchedEffect(messages.size) { saveChat() }
@@ -417,21 +411,28 @@ private fun KurdoScreen(onSpeak: (String) -> Unit, onListen: ((String) -> Unit) 
                                 status = "Yaklaşık 965 MB yerel model indiriliyor…"
                                 scope.launch {
                                     try {
-                                        val model = downloadModel(context) { copied, total ->
-                                            progress = copied.toFloat() / total.toFloat()
-                                            progressLabel = "%.0f%% · %.0f / %.0f MB".format(Locale.US, copied / 1048576f, total / 1048576f)
+                                        val modelFile = File(context.filesDir, MODEL_FILE)
+                                        if (modelFile.exists() && modelFile.length() == MODEL_BYTES) {
+                                            status = "Model telefonda başlatılıyor…"
+                                            runtime.load()
+                                            modelReady = true
+                                            status = "Kurdo hazır; sohbet cihazda çevrimdışı çalışıyor."
+                                        } else {
+                                            downloadModel(context) { copied, total ->
+                                                progress = copied.toFloat() / total.toFloat()
+                                                progressLabel = "%.0f%% · %.0f / %.0f MB".format(Locale.US, copied / 1048576f, total / 1048576f)
+                                            }
+                                            progress = 1f
+                                            progressLabel = "İndirme tamamlandı"
+                                            status = "Model indirildi ve telefona kaydedildi. Kurdo'yu başlatmak için düğmeye tekrar bas."
                                         }
-                                        status = "Model indirildi; telefonda hazırlanıyor…"
-                                        runtime.load()
-                                        modelReady = true
-                                        status = "Kurdo hazır; sohbet cihazda çevrimdışı çalışıyor."
                                         errorText = ""
                                     } catch (error: Throwable) {
                                         errorText = error.message ?: "İndirme veya model hazırlama başarısız oldu."
                                         status = "Kurdo hazırlanamadı."
                                     } finally { working = false }
                                 }
-                            }) { Text(if (File(context.filesDir, MODEL_FILE).exists()) "Yerel modeli hazırla" else "Yerel modeli indir · yaklaşık 965 MB") }
+                            }) { Text(if (File(context.filesDir, MODEL_FILE).let { it.exists() && it.length() == MODEL_BYTES }) "Yerel modeli hazırla" else "Yerel modeli indir · yaklaşık 965 MB") }
                             if (progress > 0f && progress < 1f) {
                                 Spacer(Modifier.height(6.dp))
                                 androidx.compose.material3.LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
